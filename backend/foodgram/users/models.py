@@ -53,16 +53,21 @@ class User(AbstractUser):
 class Subscribe(models.Model):
     user = models.ForeignKey(
         User,
+        verbose_name='пользователь',
         on_delete=models.CASCADE,
         related_name="subscriber"
     )
     subscribing = models.ForeignKey(
         User,
+        verbose_name='подписки пользователя',
         on_delete=models.CASCADE,
         related_name="subscribing"
     )
 
     class Meta:
+        ordering = ('-user',)
+        verbose_name = 'подписка'
+        verbose_name_plural = 'подписки'
         constraints = [
             models.CheckConstraint(
                 check=~models.Q(subscribing=models.F('user')),
