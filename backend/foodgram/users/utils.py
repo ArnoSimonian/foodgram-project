@@ -1,0 +1,10 @@
+# START_NUM = 1000
+# FINAL_NUM = 9999
+# GAP = 1
+# EMAIL = 'Электронная почта занята'
+# USERNAME = 'Имя пользователя занято'
+EMAIL_LENGTH = 254
+USERNAME_LENGTH = 150
+# NAME_LENGTH = 256
+# SLUG_LENGTH = 50
+PASS_LENGTH = 150
