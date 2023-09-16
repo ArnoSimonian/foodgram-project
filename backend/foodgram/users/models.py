@@ -57,11 +57,11 @@ class Subscribe(models.Model):
         on_delete=models.CASCADE,
         related_name="subscriber"
     )
-    subscribing = models.ForeignKey(
+    is_subscribed = models.ForeignKey(
         User,
         verbose_name='подписки пользователя',
         on_delete=models.CASCADE,
-        related_name="subscribing"
+        related_name="is_subscribed"
     )
 
     class Meta:
@@ -70,11 +70,11 @@ class Subscribe(models.Model):
         verbose_name_plural = 'подписки'
         constraints = [
             models.CheckConstraint(
-                check=~models.Q(subscribing=models.F('user')),
+                check=~models.Q(is_subscribed=models.F('user')),
                 name='could_not_subscribe_itself'
             ),
             models.UniqueConstraint(
-                fields=['user', 'subscribing'],
-                name='unique_subscribing'
+                fields=['user', 'is_subscribed'],
+                name='unique_is_subscribed'
             )
         ]
