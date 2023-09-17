@@ -3,3 +3,4 @@ pytz==2023.3.post1
 sqlparse==0.4.4
 psycopg2-binary==2.9.7
 djangorestframework==3.14.0
+djoser==2.2.0
