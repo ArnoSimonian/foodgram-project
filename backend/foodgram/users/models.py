@@ -37,6 +37,9 @@ class User(AbstractUser):
     )
     #is_subscribed = models.BooleanField(verbose_name='есть подписка')
 
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['first_name', 'last_name']
+
     @property
     def is_admin(self):
         return self.role == self.ADMIN or self.is_superuser or self.is_staff
@@ -57,11 +60,11 @@ class Subscribe(models.Model):
         on_delete=models.CASCADE,
         related_name="subscriber"
     )
-    is_subscribed = models.ForeignKey(
+    subscribing = models.ForeignKey(
         User,
         verbose_name='подписки пользователя',
         on_delete=models.CASCADE,
-        related_name="is_subscribed"
+        related_name="subscribing"
     )
 
     class Meta:
@@ -70,11 +73,11 @@ class Subscribe(models.Model):
         verbose_name_plural = 'подписки'
         constraints = [
             models.CheckConstraint(
-                check=~models.Q(is_subscribed=models.F('user')),
+                check=~models.Q(subscribing=models.F('user')),
                 name='could_not_subscribe_itself'
             ),
             models.UniqueConstraint(
-                fields=['user', 'is_subscribed'],
-                name='unique_is_subscribed'
+                fields=['user', 'subscribing'],
+                name='unique_subscribing'
             )
         ]
