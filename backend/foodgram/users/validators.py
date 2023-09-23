@@ -1,17 +1,18 @@
 import re
 
-from rest_framework import serializers
+# from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 
-def validate_name(value):
+def validate_username(value):
     if value == 'me':
-        raise serializers.ValidationError(
-            "Это имя использовать запрещено!"
+        raise ValidationError(
+            "Имя пользователя 'me' использовать запрещено."
         )
-    result = re.sub('[\w.\@\+\-\([а-яА-яёЁ]+)', '', value)
-    result_set = set(result)
-    if len(result_set) != 0:
-        raise serializers.ValidationError(
-            f'Недопустимые символы {result_set} в имени пользователя.'
-        )
+    # result = re.sub('[\w.\@\+\-\([а-яА-яёЁ]+)', '', value)
+    # result_set = set(result)
+    # if len(result_set) != 0:
+    #     raise serializers.ValidationError(
+    #         f'Недопустимые символы {result_set} в имени пользователя.'
+    #     )
     return value

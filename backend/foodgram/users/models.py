@@ -1,8 +1,9 @@
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 
 from .utils import EMAIL_LENGTH, PASS_LENGTH, USERNAME_LENGTH
-#from .validators import validate_name
+from .validators import validate_username
 
 
 class User(AbstractUser):
@@ -16,17 +17,19 @@ class User(AbstractUser):
 
     username = models.CharField(verbose_name='имя пользователя',
                                 max_length=USERNAME_LENGTH,
-                                unique=True)
+                                unique=True,
+                                validators=[
+                                    UnicodeUsernameValidator(),
+                                    validate_username,
+                                ])
     email = models.EmailField(verbose_name='email',
                               max_length=EMAIL_LENGTH,
                               unique=True)
     first_name = models.CharField(verbose_name='имя',
-                                  max_length=USERNAME_LENGTH,
-                                  blank=True)
+                                  max_length=USERNAME_LENGTH)
     last_name = models.CharField(verbose_name='фамилия',
-                                 max_length=USERNAME_LENGTH,
-                                 blank=True)
-    password = models.CharField(verbose_name='код подтверждения',
+                                 max_length=USERNAME_LENGTH)
+    password = models.CharField(verbose_name='пароль',
                                 max_length=PASS_LENGTH)
     role = models.CharField(
         verbose_name='уровень доступа',
@@ -38,7 +41,7 @@ class User(AbstractUser):
     #is_subscribed = models.BooleanField(verbose_name='есть подписка')
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
     @property
     def is_admin(self):
