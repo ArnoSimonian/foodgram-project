@@ -1,11 +1,11 @@
-import re
+#import re
 
 # from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 
 def validate_username(value):
-    if value == 'me':
+    if value.lower() == 'me':
         raise ValidationError(
             "Имя пользователя 'me' использовать запрещено."
         )

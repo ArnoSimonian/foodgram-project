@@ -2,7 +2,8 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 
-from .utils import EMAIL_LENGTH, PASS_LENGTH, USERNAME_LENGTH
+from .utils import (EMAIL_LENGTH, FIRST_NAME_LENGTH, LAST_NAME_LENGTH,
+                    PASSWORD_LENGTH, USERNAME_LENGTH)
 from .validators import validate_username
 
 
@@ -15,22 +16,32 @@ class User(AbstractUser):
         (ADMIN, 'Администратор'),
     )
 
-    username = models.CharField(verbose_name='имя пользователя',
-                                max_length=USERNAME_LENGTH,
-                                unique=True,
-                                validators=[
-                                    UnicodeUsernameValidator(),
-                                    validate_username,
-                                ])
-    email = models.EmailField(verbose_name='email',
-                              max_length=EMAIL_LENGTH,
-                              unique=True)
-    first_name = models.CharField(verbose_name='имя',
-                                  max_length=USERNAME_LENGTH)
-    last_name = models.CharField(verbose_name='фамилия',
-                                 max_length=USERNAME_LENGTH)
-    password = models.CharField(verbose_name='пароль',
-                                max_length=PASS_LENGTH)
+    username = models.CharField(
+        verbose_name='имя пользователя',
+        max_length=USERNAME_LENGTH,
+        unique=True,
+        validators=[
+            UnicodeUsernameValidator(),
+            validate_username
+        ]
+    )
+    email = models.EmailField(
+        verbose_name='email',
+        max_length=EMAIL_LENGTH,
+        unique=True
+    )
+    first_name = models.CharField(
+        verbose_name='имя',
+        max_length=FIRST_NAME_LENGTH
+    )
+    last_name = models.CharField(
+        verbose_name='фамилия',
+        max_length=LAST_NAME_LENGTH
+    )
+    password = models.CharField(
+        verbose_name='пароль',
+        max_length=PASSWORD_LENGTH
+    )
     role = models.CharField(
         verbose_name='уровень доступа',
         max_length=max(len(role) for role, _ in ROLE_CHOICES),
@@ -82,5 +93,8 @@ class Subscribe(models.Model):
             models.UniqueConstraint(
                 fields=['user', 'subscribing'],
                 name='unique_subscribing'
-            )
+            ),
         ]
+
+    def __str__(self):
+        return f'{self.user.username}: {self.subscribing.username}'
