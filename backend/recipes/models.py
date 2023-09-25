@@ -28,7 +28,7 @@ class Tag(models.Model):
     )
 
     class Meta:
-        ordering = ('-name',)
+        ordering = ('name',)
         verbose_name = 'тег'
         verbose_name_plural = 'теги'
 
@@ -47,7 +47,7 @@ class Ingredient(models.Model):
     )
 
     class Meta:
-        ordering = ('-name',)
+        ordering = ('name',)
         verbose_name = 'ингредиент'
         verbose_name_plural = 'ингредиенты'
 

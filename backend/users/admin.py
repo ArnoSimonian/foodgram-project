@@ -1,11 +1,11 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.admin import UserAdmin
 
 from .models import Subscribe, User
 
 
 @admin.register(User)
-class UserAdmin(BaseUserAdmin):
+class UserAdmin(UserAdmin):
     list_display = (
         'pk',
         'username',
@@ -13,7 +13,7 @@ class UserAdmin(BaseUserAdmin):
         'first_name',
         'last_name',
         'password',
-        'role'
+        'role',
     )
     list_editable = ('role',)
     search_fields = ('username', 'email',)
@@ -21,4 +21,9 @@ class UserAdmin(BaseUserAdmin):
     empty_value_display = '-пусто-'
 
 
-admin.site.register(Subscribe)
+@admin.register(Subscribe)
+class SubscribeAdmin(admin.ModelAdmin):
+    list_display = (
+        'user',
+        'subscribing',
+    )
