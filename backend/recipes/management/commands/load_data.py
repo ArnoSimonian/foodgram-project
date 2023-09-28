@@ -1,42 +1,38 @@
-import pandas as pd
+import csv
+from io import StringIO
 
+from django.apps import apps
 from django.conf import settings
+from django.core.management import BaseCommand, call_command, CommandError
 from django.db import connection
-from pathlib import Path
 
 from recipes.models import Ingredient
 
 
-# DATA_DIR = Path(settings.DATA_ROOT)
+DATA = {
+    Ingredient: 'ingredients.csv',
+}
 
+class Command(BaseCommand):
+    def handle(self, *args, **options):
+        try:
+            for model, csvfile in DATA.items():
+                with open(
+                    f'{settings.BASE_DIR}/data/{csvfile}',
+                    'r', encoding='utf-8',
+                ) as data:
+                    reader = csv.DictReader(data)
+                    model.objects.bulk_create(model(**row) for row in reader)
+        except FileNotFoundError:
+            raise CommandError(f'Файл {csvfile} не найден.')
+        self.stdout.write(self.style.SUCCESS(
+            'Данные загружены успешно.')
+        )
 
-def load_data_from_csv(csv_file_path):
-    # Загрузка данных из CSV файла в DataFrame
-    df = pd.read_csv(csv_file_path)
-
-    # Преобразование DataFrame в список словарей (каждая строка CSV - словарь)
-    data = df.to_dict(orient='records')
-
-    # Очистка таблицы в базе данных
-    with connection.cursor() as cursor:
-        cursor.execute('TRUNCATE TABLE recipes_ingredient RESTART IDENTITY CASCADE')
-
-    # Загрузка данных в базу данных
-    for record in data:
-        Ingredient.objects.create(**record)
-
-
-if __name__ == "__main__":
-    # Укажите путь к вашему файлу CSV
-    csv_file_path = Path(settings.DATA_ROOT / 'ingredients.csv')
-
-    # Проверяем существование файла
-    if csv_file_path.exists():
-        load_data_from_csv(csv_file_path)
-        print("Данные успешно загружены в базу данных.")
-    else:
-        print("Файл CSV не найден. Пожалуйста, укажите правильный путь.")
-
-
-# # Вызываем функцию с указанием пути к файлу CSV
-# load_data_from_csv('DATA_DIR / ingredients.csv')
+        commands = StringIO()
+        for app in apps.get_app_configs():
+            call_command(
+                'sqlsequencereset', app.label, stdout=commands, no_color=True
+            )
+        with connection.cursor() as cursor:
+            cursor.execute(commands.getvalue())
