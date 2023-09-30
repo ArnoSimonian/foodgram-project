@@ -77,5 +77,5 @@ class UserSubscribeSerializer(UserSerializer):
                 'user_id')
         ):
                 raise serializers.ValidationError(
-                    'Нельзя подписаться на самого себя.')
+                    "Нельзя подписаться на самого себя.")
         return data

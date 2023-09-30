@@ -108,12 +108,14 @@ class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         verbose_name='рецепт',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='recipes_with_ingredients'
     )
     ingredient = models.ForeignKey(
         Ingredient,
         verbose_name='ингредиент',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='ingredients_used'
     )
     amount = models.PositiveSmallIntegerField(
         verbose_name='количество ингридиента',
@@ -143,12 +145,14 @@ class RecipeTag(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         verbose_name='рецепт',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='recipes_with_tags'
     )
     tag = models.ForeignKey(
         Tag,
         verbose_name='тег',
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='tags_used'
     )
 
     class Meta:
