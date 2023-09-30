@@ -16,7 +16,7 @@ from .serializers import UserSubscribeSerializer
 
 
 class UserViewSet(djoser_views.UserViewSet):
-    http_method_names = ['get', 'post']
+    http_method_names = ['get', 'post', 'delete']
     permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get_permissions(self):
@@ -24,47 +24,43 @@ class UserViewSet(djoser_views.UserViewSet):
             self.permission_classes = (IsAuthenticated,)
         return super().get_permissions()
 
-
-class SubscribeViewSet(viewsets.ModelViewSet):
-    http_method_names = ['get', 'post', 'delete']
-    serializer_class=UserSubscribeSerializer
-    permission_classes=(IsAuthenticated,)
-
     @action(methods=['get'],
+            serializer_class=UserSubscribeSerializer,
+            permission_classes=(IsAuthenticated,),
             detail=False)
     def subscriptions(self, request):
         subscriptions = (
-            User.objects.filter(subscribing__subscriber=self.request.user)
-            .annotate(last_recipe_date=Max('recipes__pub_date'))
-            .order_by(F('last_recipe_date').desc(nulls_last=True))
+            User.objects.filter(
+                subscribing__user=self.request.user).annotate(
+                    last_recipe_date=Max('recipes__pub_date')).order_by(
+                        F('last_recipe_date').desc(nulls_last=True))
         )
         page = self.paginate_queryset(subscriptions)
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
-    @action(methods=['post'],
+    @action(methods=['post', 'delete'],
+            serializer_class=UserSubscribeSerializer,
+            permission_classes=(IsAuthenticated,),
             detail=True)
     def subscribe(self, request, id):
-        subscriber = request.user
+        user = request.user
         subscribing = get_object_or_404(User, pk=id)
-        if Subscribe.objects.filter(
-            subscriber=subscriber, subscribing=subscribing
-        ).exists():
-            raise ValidationError("Нельзя подписаться на автора дважды.")
-        if subscriber == subscribing:
-            raise ValidationError("Нельзя подписаться на самого себя.")
-        Subscribe.objects.create(subscriber=subscriber, subscribing=subscribing)
-        serializer = self.get_serializer(subscribing)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    @action(methods=['delete'],
-            detail=True)
-    def subscribe_delete(self, request, id):
-        subscription = Subscribe.objects.filter(
-            subscriber=request.user,
-            subscribing=get_object_or_404(User, pk=id),
+        subscription = Subscribe.objects.select_related('user', 'subscribing').filter(
+            user=user, subscribing=subscribing,
         )
-        if not subscription.exists():
-            raise ValidationError("Подписки не существует.")
-        subscription.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        
+        if request.method == 'POST':
+            if subscription.exists():
+                raise ValidationError("Нельзя подписаться на автора дважды.")
+            if user == subscribing:
+                raise ValidationError("Нельзя подписаться на самого себя.")
+            Subscribe.objects.create(user=user, subscribing=subscribing)
+            serializer = self.get_serializer(subscribing)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        if request.method == 'DELETE':
+            if not subscription.exists():
+                raise ValidationError("Вы не подписаны на этого автора.")
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
