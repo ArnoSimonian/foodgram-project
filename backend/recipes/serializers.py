@@ -2,15 +2,52 @@ import base64
 
 from django.core.files.base import ContentFile
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
-from users.serializers import UserSerializer
-from .models import Ingredient, Recipe, RecipeIngredient, Tag
+from users.models import Subscribe
+from users.serializers import CustomUserSerializer
+from .models import Favorite, Ingredient, Recipe, RecipeIngredient, ShoppingCart, Tag
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
+
+
+class UserSubscribeSerializer(CustomUserSerializer):
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.ReadOnlyField(source='recipes.count')
+
+    class Meta(CustomUserSerializer.Meta):
+        fields = CustomUserSerializer.Meta.fields + (
+            'recipes', 'recipes_count',
+        )
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Subscribe.objects.all(),
+                fields=('user', 'subscribing'),
+                message="Нельзя подписаться на автора дважды."
+            )
+        ]
+
+    def get_recipes(self, obj):
+        request = self.context['request']
+        recipes_limit = int(request.query_params.get('recipes_limit', 0))
+        queryset = obj.recipes.all()
+        if recipes_limit > 0:
+            queryset = queryset[:recipes_limit]
+        serializer = RecipeShortSerializer(queryset, many=True, read_only=True)
+        return serializer.data
+
+    def validate(self, data):
+        if self.context['request'].method == 'POST' and (
+            self.context['request'].user.pk == self.context['view'].kwargs.get(
+                'user_id')
+        ):
+                raise serializers.ValidationError(
+                    "Нельзя подписаться на самого себя.")
+        return data
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -39,7 +76,7 @@ class RecipeIngredientReadSerializer(serializers.ModelSerializer):
 
 class RecipeReadSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
-    author = UserSerializer(read_only=True)
+    author = CustomUserSerializer(read_only=True)
     ingredients = RecipeIngredientReadSerializer(
         many=True,
         read_only=True,
@@ -169,3 +206,39 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         context = {'request': self.context['request']}
         return RecipeReadSerializer(instance, context=context).data
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    recipe = RecipeShortSerializer(
+        read_only=True,
+        source='favorite_recipe',
+    )
+
+    class Meta:
+        model = Favorite
+        fields = 'recipe'
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Favorite.objects.all(),
+                fields=('user', 'recipe'),
+                message="Этот рецепт уже есть в Избранном."
+            )
+        ]
+
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+    recipe = RecipeShortSerializer(
+        read_only=True,
+        source='is_in_shopping_cart'
+    )
+
+    class Meta:
+        model = ShoppingCart
+        fields = 'recipe'
+        validators = [
+            UniqueTogetherValidator(
+                queryset=ShoppingCart.objects.all(),
+                fields=('user', 'recipe'),
+                message="Этот рецепт уже есть в Списке покупок."
+            )
+        ]

@@ -9,8 +9,8 @@ from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
 #from api.pagination import LimitPageNumberPagination
+from recipes.serializers import UserSubscribeSerializer
 from .models import User, Subscribe
-from .serializers import UserSubscribeSerializer
 
 # User = get_user_model()
 
@@ -49,7 +49,7 @@ class UserViewSet(djoser_views.UserViewSet):
         subscription = Subscribe.objects.select_related('user', 'subscribing').filter(
             user=user, subscribing=subscribing,
         )
-        
+
         if request.method == 'POST':
             if subscription.exists():
                 raise ValidationError("Нельзя подписаться на автора дважды.")
