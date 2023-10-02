@@ -225,6 +225,22 @@ class FavoriteSerializer(serializers.ModelSerializer):
             )
         ]
 
+    # class Meta:
+    #     model = Favorite
+    #     fields = ('user', 'recipe')
+
+    # def validate(self, data):
+    #     user, recipe = data.get('user'), data.get('recipe')
+    #     if self.Meta.model.objects.filter(user=user, recipe=recipe).exists():
+    #         raise ValidationError(
+    #             {'error': 'Этот рецепт уже добавлен'}
+    #         )
+    #     return data
+
+    # def to_representation(self, instance):
+    #     context = {'request': self.context.get('request')}
+    #     return RecipeInfoSerializer(instance.recipe, context=context).data
+
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
     recipe = RecipeShortSerializer(
@@ -242,3 +258,8 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
                 message="Этот рецепт уже есть в Списке покупок."
             )
         ]
+
+    # class ShoppingCartSerializer(FavoriteSerializer):
+    # """Сериализатор добавления/удаления рецепта в список покупок."""
+    # class Meta(FavoriteSerializer.Meta):
+    #     model = ShoppingCart

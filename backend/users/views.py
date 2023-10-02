@@ -59,7 +59,7 @@ class UserViewSet(djoser_views.UserViewSet):
             serializer = self.get_serializer(subscribing)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        if request.method == 'DELETE':
+        elif request.method == 'DELETE':
             if not subscription.exists():
                 raise ValidationError("Вы не подписаны на этого автора.")
             subscription.delete()
