@@ -1,14 +1,12 @@
-#from django.contrib.auth import get_user_model
 from django.db.models import F, Max
 from django.shortcuts import get_object_or_404
 from djoser import views as djoser_views
-from rest_framework import filters, status, viewsets
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
-#from api.pagination import LimitPageNumberPagination
 from recipes.serializers import UserSubscribeSerializer
 from .models import User, Subscribe
 
@@ -44,7 +42,7 @@ class UserViewSet(djoser_views.UserViewSet):
             permission_classes=(IsAuthenticated,),
             detail=True)
     def subscribe(self, request, id):
-        user = request.user
+        user = self.request.user
         subscribing = get_object_or_404(User, pk=id)
         subscription = Subscribe.objects.select_related('user', 'subscribing').filter(
             user=user, subscribing=subscribing,
