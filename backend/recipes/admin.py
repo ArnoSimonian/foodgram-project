@@ -23,18 +23,22 @@ class RecipeAdmin(admin.ModelAdmin):
         'ingredients_list',
         'author',
         'pub_date',
+        'favorite_count',
     )
     list_editable = ('name',)
-    list_filter = ('tags', 'ingredients',)
+    list_filter = ('name', 'tags', 'author',)
     search_fields = ('name', 'author__username',)
     inlines = (RecipeIngredientInline, RecipeTagInline,)
-    readonly_fields = ('ingredients_list',)
+    readonly_fields = ('favorite_count', 'ingredients_list',)
 
-    @admin.display(description='ингредиенты')
+    @admin.display(description='добавления рецепта в избранное')
+    def favorite_count(self, obj):
+        return obj.favorite_recipe.count()
+
+    @admin.display(description='ингредиенты рецепта')
     def ingredients_list(self, recipe):
         items = recipe.ingredients.values_list('name', flat=True)
         return ', '.join(items)
-
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
@@ -57,6 +61,7 @@ class IngredientAdmin(admin.ModelAdmin):
         'measurement_unit',
     )
     list_editable = ('name', 'measurement_unit',)
+    list_filter = ('name',)
     search_fields = ('name',)
     inlines = (RecipeIngredientInline,)
 
