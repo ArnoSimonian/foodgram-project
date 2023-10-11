@@ -107,18 +107,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
             total_amount=Sum('ingredients_used__amount')
         )
 
-        FILENAME = f'{request.user.username}_shopping_cart.pdf'
-        TEMPLATE = '* {name} ({measurement_unit}) — {total_amount}\n'
+        FILENAME = 'shopping-list.txt'
+        TEMPLATE = '* {name}: {total_amount} {measurement_unit}\n'
 
-        shopping_cart = (
-            TEMPLATE.format(**ingredient.__dict__)
-            for ingredient in ingredients_in_cart
-        )
+        shopping_cart = [f'Список покупок пользователя {request.user.username}\n\n']
+        shopping_cart.append(TEMPLATE.format(**ingredient.__dict__)
+            for ingredient in ingredients_in_cart)
+        shopping_cart.append('\n\n(c) Foodgram-idze')
 
         return HttpResponse(
             shopping_cart,
             headers={
-                'Content-Type': 'application/pdf',
+                'Content-Type': 'text/plain',
                 'Content-Disposition': (
                     f'attachment; filename={FILENAME}'
                 ),

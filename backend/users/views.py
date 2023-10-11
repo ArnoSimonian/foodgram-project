@@ -3,19 +3,22 @@ from django.shortcuts import get_object_or_404
 from djoser import views as djoser_views
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
 from recipes.serializers import UserSubscribeSerializer
+from users.serializers import CustomUserSerializer
 from .models import User, Subscribe
 
 # User = get_user_model()
 
 
 class UserViewSet(djoser_views.UserViewSet):
+    queryset = User.objects.all()
+    serializer_class = CustomUserSerializer
+    permission_classes = (AllowAny,)
     http_method_names = ['get', 'post', 'delete']
-    permission_classes = (IsAuthenticatedOrReadOnly,)
 
     def get_permissions(self):
         if self.action == 'me':
