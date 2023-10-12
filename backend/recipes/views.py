@@ -40,7 +40,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
-    #filterset_fields = ('author', 'tags', 'is_favorited', 'is_in_shopping_cart',)
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_serializer_class(self):
@@ -56,7 +55,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         try:
             recipe = Recipe.objects.get(pk=pk)
         except Recipe.DoesNotExist:
-            return Response("Рецепта не существует", status=status.HTTP_400_BAD_REQUEST)
+            return Response("Рецепта не существует.",
+                            status=status.HTTP_400_BAD_REQUEST)
         object = serializer_class.Meta.model.objects.filter(
             user=user, recipe=recipe
         )
@@ -108,12 +108,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
         )
 
         FILENAME = 'shopping-list.txt'
-        TEMPLATE = '* {name}: {total_amount} {measurement_unit}\n'
+        TEMPLATE = '{name}: {total_amount} {measurement_unit}\n'
 
-        shopping_cart = [f'Список покупок пользователя {request.user.username}\n\n']
-        shopping_cart.append(TEMPLATE.format(**ingredient.__dict__)
-            for ingredient in ingredients_in_cart)
-        shopping_cart.append('\n\n(c) Foodgram-idze')
+        shopping_cart = (
+            TEMPLATE.format(**ingredient.__dict__)
+            for ingredient in ingredients_in_cart
+        )
 
         return HttpResponse(
             shopping_cart,

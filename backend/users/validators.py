@@ -2,7 +2,7 @@ import re
 
 from rest_framework.exceptions import ValidationError
 
-    
+
 USERNAME_REGEX = r'[\w\.@+-]+'
 NOT_ALLOWED_ME = ("Нельзя создать пользователя с "
                   "именем '{username}' - это имя запрещено.")

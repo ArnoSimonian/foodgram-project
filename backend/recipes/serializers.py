@@ -15,7 +15,7 @@ from .validators import validate_tag_color, validate_tag_slug
 class RecipeShortSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
-        fields = ('id', 'name', 'image', 'cooking_time')
+        fields = ('id', 'name', 'image', 'cooking_time',)
 
 
 class UserSubscribeSerializer(CustomUserSerializer):
@@ -29,9 +29,9 @@ class UserSubscribeSerializer(CustomUserSerializer):
         validators = [
             UniqueTogetherValidator(
                 queryset=Subscribe.objects.all(),
-                fields=('user', 'subscribing'),
-                message="Нельзя подписаться на автора дважды."
-            )
+                fields=('user', 'subscribing',),
+                message="Нельзя подписаться на автора дважды.",
+            ),
         ]
 
     def get_recipes(self, obj):
@@ -48,15 +48,16 @@ class UserSubscribeSerializer(CustomUserSerializer):
             self.context['request'].user.pk == self.context['view'].kwargs.get(
                 'user_id')
         ):
-                raise serializers.ValidationError(
-                    "Нельзя подписаться на самого себя.")
+            raise serializers.ValidationError(
+                "Нельзя подписаться на самого себя."
+            )
         return data
 
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = ('id', 'name', 'color', 'slug')
+        fields = ('id', 'name', 'color', 'slug',)
 
     def validate_tag_color(self, value):
         return validate_tag_color(value)
@@ -68,7 +69,7 @@ class TagSerializer(serializers.ModelSerializer):
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
-        fields = ('id', 'name', 'measurement_unit')
+        fields = ('id', 'name', 'measurement_unit',)
 
 
 class RecipeIngredientReadSerializer(serializers.ModelSerializer):
@@ -81,7 +82,7 @@ class RecipeIngredientReadSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RecipeIngredient
-        fields = ('id', 'name', 'measurement_unit', 'amount')
+        fields = ('id', 'name', 'measurement_unit', 'amount',)
 
 
 class RecipeReadSerializer(serializers.ModelSerializer):
@@ -141,7 +142,6 @@ class RecipeIngredientCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeIngredient
         fields = ('id', 'amount',)
-        #read_only_fields = ('id',)
 
 
 class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
@@ -251,9 +251,9 @@ class FavoriteSerializer(AbstractFavoriteShoppingCartSerializer):
         validators = [
             UniqueTogetherValidator(
                 queryset=Favorite.objects.all(),
-                fields=('user', 'recipe'),
-                message="Этот рецепт уже есть в Избранном."
-            )
+                fields=('user', 'recipe',),
+                message="Этот рецепт уже есть в Избранном.",
+            ),
         ]
 
 
@@ -263,7 +263,7 @@ class ShoppingCartSerializer(AbstractFavoriteShoppingCartSerializer):
         validators = [
             UniqueTogetherValidator(
                 queryset=ShoppingCart.objects.all(),
-                fields=('user', 'recipe'),
-                message="Этот рецепт уже есть в Списке покупок."
-            )
+                fields=('user', 'recipe',),
+                message="Этот рецепт уже есть в Списке покупок.",
+            ),
         ]

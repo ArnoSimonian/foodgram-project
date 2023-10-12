@@ -3,15 +3,13 @@ from django.shortcuts import get_object_or_404
 from djoser import views as djoser_views
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
 from recipes.serializers import UserSubscribeSerializer
-from users.serializers import CustomUserSerializer
-from .models import User, Subscribe
-
-# User = get_user_model()
+from .models import Subscribe, User
+from .serializers import CustomUserSerializer
 
 
 class UserViewSet(djoser_views.UserViewSet):
@@ -32,9 +30,9 @@ class UserViewSet(djoser_views.UserViewSet):
     def subscriptions(self, request):
         subscriptions = (
             User.objects.filter(
-                subscribing__user=self.request.user).annotate(
-                    last_recipe_date=Max('recipes__pub_date')).order_by(
-                        F('last_recipe_date').desc(nulls_last=True))
+                subscribing__user=self.request.user
+            ).annotate(last_recipe_date=Max('recipes__pub_date'))
+            .order_by(F('last_recipe_date').desc(nulls_last=True))
         )
         page = self.paginate_queryset(subscriptions)
         serializer = self.get_serializer(page, many=True)
@@ -47,9 +45,9 @@ class UserViewSet(djoser_views.UserViewSet):
     def subscribe(self, request, id):
         user = self.request.user
         subscribing = get_object_or_404(User, pk=id)
-        subscription = Subscribe.objects.select_related('user', 'subscribing').filter(
-            user=user, subscribing=subscribing,
-        )
+        subscription = Subscribe.objects.select_related(
+            'user', 'subscribing'
+        ).filter(user=user, subscribing=subscribing)
 
         if request.method == 'POST':
             if subscription.exists():

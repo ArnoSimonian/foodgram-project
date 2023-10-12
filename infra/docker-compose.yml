@@ -29,7 +29,6 @@ services:
       context: ../frontend
       dockerfile: Dockerfile
     env_file: .env
-    #command: cp -r /app/build/. /frontend_static/
     volumes:
       - static:/app/result_build/build
 

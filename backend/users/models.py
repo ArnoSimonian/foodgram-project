@@ -20,36 +20,33 @@ class User(AbstractUser):
         verbose_name='имя пользователя',
         max_length=USERNAME_LENGTH,
         unique=True,
-        validators=[
-            UnicodeUsernameValidator(),
-            validate_username
-        ]
+        validators=[UnicodeUsernameValidator(),
+                    validate_username],
     )
     email = models.EmailField(
         verbose_name='email',
         max_length=EMAIL_LENGTH,
-        unique=True
+        unique=True,
     )
     first_name = models.CharField(
         verbose_name='имя',
-        max_length=FIRST_NAME_LENGTH
+        max_length=FIRST_NAME_LENGTH,
     )
     last_name = models.CharField(
         verbose_name='фамилия',
-        max_length=LAST_NAME_LENGTH
+        max_length=LAST_NAME_LENGTH,
     )
     password = models.CharField(
         verbose_name='пароль',
-        max_length=PASSWORD_LENGTH
+        max_length=PASSWORD_LENGTH,
     )
     role = models.CharField(
         verbose_name='уровень доступа',
         max_length=max(len(role) for role, _ in ROLE_CHOICES),
         choices=ROLE_CHOICES,
         default=USER,
-        blank=True
+        blank=True,
     )
-    #is_subscribed = models.BooleanField(verbose_name='есть подписка')
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
@@ -72,13 +69,13 @@ class Subscribe(models.Model):
         User,
         verbose_name='пользователь',
         on_delete=models.CASCADE,
-        related_name="subscriber"
+        related_name='subscriber',
     )
     subscribing = models.ForeignKey(
         User,
         verbose_name='подписки пользователя',
         on_delete=models.CASCADE,
-        related_name="subscribing"
+        related_name='subscribing',
     )
 
     class Meta:
@@ -88,11 +85,11 @@ class Subscribe(models.Model):
         constraints = [
             models.CheckConstraint(
                 check=~models.Q(subscribing=models.F('user')),
-                name='could_not_subscribe_itself'
+                name='could_not_subscribe_itself',
             ),
             models.UniqueConstraint(
                 fields=['user', 'subscribing'],
-                name='unique_subscribing'
+                name='unique_subscribing',
             ),
         ]
 

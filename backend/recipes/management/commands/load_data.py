@@ -24,9 +24,9 @@ class Command(BaseCommand):
                     reader = csv.DictReader(data)
                     model.objects.bulk_create(model(**row) for row in reader)
         except FileNotFoundError:
-            raise CommandError(f'Файл {csvfile} не найден.')
+            raise CommandError(f"Файл {csvfile} не найден.")
         self.stdout.write(self.style.SUCCESS(
-            'Данные загружены успешно.')
+            "Данные загружены успешно.")
         )
 
         commands = StringIO()

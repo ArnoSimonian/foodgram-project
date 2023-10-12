@@ -5,8 +5,6 @@ from rest_framework.validators import UniqueTogetherValidator
 from .models import User
 from .validators import validate_username
 
-# User = get_user_model()
-
 
 class CustomUserCreateSerializer(djoser_serializers.UserCreateSerializer):
     class Meta:
@@ -41,9 +39,9 @@ class CustomUserSerializer(djoser_serializers.UserSerializer):
         validators = [
             UniqueTogetherValidator(
                 queryset=User.objects.all(),
-                fields=('username', 'email'),
-                message="Пара 'username' и 'email' должна быть уникальной."
-            )
+                fields=('username', 'email',),
+                message="Пара 'username' и 'email' должна быть уникальной.",
+            ),
         ]
 
     def get_is_subscribed(self, obj):
