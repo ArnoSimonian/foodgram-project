@@ -2,10 +2,10 @@ import re
 
 from rest_framework.exceptions import ValidationError
 
-
 TAG_COLOR_REGEX = r'^#[0-9a-fA-F]+'
 TAG_SLUG_REGEX = r'[-a-zA-Z0-9_]+'
-NOT_ALLOWED_COLOR_CHAR_MSG = ("{chars} - недопустимые символы в цвете тега {color} "
+NOT_ALLOWED_COLOR_CHAR_MSG = ("{chars} - недопустимые символы "
+                              "в цвете тега {color} "
                               "или цвет не начинается с символа '#'.")
 NOT_ALLOWED_SLUG_CHAR_MSG = ("{chars} - недопустимые символы "
                              "в слаге тега {slug}.")

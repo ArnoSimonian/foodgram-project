@@ -3,15 +3,15 @@ from io import StringIO
 
 from django.apps import apps
 from django.conf import settings
-from django.core.management import BaseCommand, call_command, CommandError
+from django.core.management import BaseCommand, CommandError, call_command
 from django.db import connection
 
 from recipes.models import Ingredient
 
-
 DATA = {
     Ingredient: 'ingredients.csv',
 }
+
 
 class Command(BaseCommand):
     def handle(self, *args, **options):

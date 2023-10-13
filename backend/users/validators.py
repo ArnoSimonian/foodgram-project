@@ -2,12 +2,12 @@ import re
 
 from rest_framework.exceptions import ValidationError
 
-
 USERNAME_REGEX = r'[\w\.@+-]+'
 NOT_ALLOWED_ME = ("Нельзя создать пользователя с "
                   "именем '{username}' - это имя запрещено.")
 NOT_ALLOWED_NAME_CHAR_MSG = ("{chars} - недопустимые символы "
                              "в имени пользователя {username}.")
+
 
 def validate_username(value):
     if value.lower() == 'me':

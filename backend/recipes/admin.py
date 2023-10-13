@@ -1,7 +1,7 @@
 from django.contrib import admin
 
-from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
-                     RecipeTag, ShoppingCart, Tag)
+from .models import (Favorite, Ingredient, Recipe, RecipeIngredient, RecipeTag,
+                     ShoppingCart, Tag)
 
 
 class RecipeIngredientInline(admin.TabularInline):
@@ -39,6 +39,7 @@ class RecipeAdmin(admin.ModelAdmin):
     def ingredients_list(self, recipe):
         items = recipe.ingredients.values_list('name', flat=True)
         return ', '.join(items)
+
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):

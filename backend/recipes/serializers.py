@@ -7,6 +7,7 @@ from rest_framework.validators import UniqueTogetherValidator
 
 from users.models import Subscribe
 from users.serializers import CustomUserSerializer
+
 from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                      ShoppingCart, Tag)
 from .validators import validate_tag_color, validate_tag_slug
@@ -117,7 +118,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         return request.user.is_authenticated and (
             request.user.favorited_by.filter(recipe=obj).exists()
         )
-        
+
     def get_is_in_shopping_cart(self, obj):
         request = self.context['request']
         return request.user.is_authenticated and (
@@ -206,14 +207,18 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         recipe.tags.set(tags)
         return recipe
 
-    @transaction.atomic 
+    @transaction.atomic
     def update(self, recipe, validated_data):
         ingredients = validated_data.pop('recipes_with_ingredients', None)
         if ingredients is None:
-            raise serializers.ValidationError("Поле 'ingredients' обязательно для обновления.")
+            raise serializers.ValidationError(
+                "Поле 'ingredients' обязательно для обновления."
+            )
         tags = validated_data.pop('tags', None)
         if tags is None:
-            raise serializers.ValidationError("Поле 'tags' обязательно для обновления.")
+            raise serializers.ValidationError(
+                "Поле 'tags' обязательно для обновления."
+            )
         recipe = super().update(recipe, validated_data)
         if ingredients:
             recipe.ingredients.clear()
@@ -235,7 +240,9 @@ class AbstractFavoriteShoppingCartSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if self.Meta.model.objects.filter(user=data['user'],
                                           recipe=data['recipe']).exists():
-            raise serializers.ValidationError("Этот рецепт уже был добавлен ранее.")
+            raise serializers.ValidationError(
+                "Этот рецепт уже был добавлен ранее."
+            )
         if not data['recipe']:
             raise serializers.ValidationError("Этого рецепта не существует.")
         return data

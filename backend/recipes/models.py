@@ -2,6 +2,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 
 from users.models import User
+
 from .utils import (INGREDIENT_NAME_LENGTH, MEASUREMENT_UNIT_LENGTH,
                     RECIPE_NAME_LENGTH, TAG_COLOR_LENGTH, TAG_NAME_LENGTH,
                     TAG_SLUG_LENGTH)
