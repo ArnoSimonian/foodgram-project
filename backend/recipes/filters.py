@@ -30,7 +30,7 @@ class RecipeFilter(django_filters.FilterSet):
         if value and self.request.user.is_authenticated:
             recipe_ids = self.request.user.favorited_by.values_list(
                     'recipe_id', flat=True
-                )
+            )
             return set(queryset.filter(id__in=recipe_ids))
         return queryset
 
@@ -38,6 +38,6 @@ class RecipeFilter(django_filters.FilterSet):
         if value and self.request.user.is_authenticated:
             recipe_ids = self.request.user.in_shopping_cart_of.values_list(
                     'recipe_id', flat=True
-                )
+            )
             return set(queryset.filter(id__in=recipe_ids))
         return queryset
