@@ -2,58 +2,37 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 
-from .utils import (EMAIL_LENGTH, FIRST_NAME_LENGTH, LAST_NAME_LENGTH,
-                    PASSWORD_LENGTH, USERNAME_LENGTH)
-from .validators import validate_username
+from .constants import MAX_EMAIL_LENGTH, MAX_USER_VALUE_LENGTH
+from .validators import (validate_first_name, validate_last_name,
+                         validate_username)
 
 
 class User(AbstractUser):
-    USER = 'user'
-    ADMIN = 'admin'
-
-    ROLE_CHOICES = (
-        (USER, 'Пользователь'),
-        (ADMIN, 'Администратор'),
-    )
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name', 'password']
 
     username = models.CharField(
         verbose_name='имя пользователя',
-        max_length=USERNAME_LENGTH,
+        max_length=MAX_USER_VALUE_LENGTH,
         unique=True,
         validators=[UnicodeUsernameValidator(),
                     validate_username],
     )
     email = models.EmailField(
         verbose_name='email',
-        max_length=EMAIL_LENGTH,
+        max_length=MAX_EMAIL_LENGTH,
         unique=True,
     )
     first_name = models.CharField(
         verbose_name='имя',
-        max_length=FIRST_NAME_LENGTH,
+        max_length=MAX_USER_VALUE_LENGTH,
+        validators=[validate_first_name],
     )
     last_name = models.CharField(
         verbose_name='фамилия',
-        max_length=LAST_NAME_LENGTH,
+        max_length=MAX_USER_VALUE_LENGTH,
+        validators=[validate_last_name],
     )
-    password = models.CharField(
-        verbose_name='пароль',
-        max_length=PASSWORD_LENGTH,
-    )
-    role = models.CharField(
-        verbose_name='уровень доступа',
-        max_length=max(len(role) for role, _ in ROLE_CHOICES),
-        choices=ROLE_CHOICES,
-        default=USER,
-        blank=True,
-    )
-
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
-
-    @property
-    def is_admin(self):
-        return self.role == self.ADMIN or self.is_superuser or self.is_staff
 
     class Meta:
         ordering = ('-username',)

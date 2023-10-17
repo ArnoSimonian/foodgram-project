@@ -1,31 +1,29 @@
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, validate_slug
 from django.db import models
 
 from users.models import User
-
-from .utils import (INGREDIENT_NAME_LENGTH, MEASUREMENT_UNIT_LENGTH,
-                    RECIPE_NAME_LENGTH, TAG_COLOR_LENGTH, TAG_NAME_LENGTH,
-                    TAG_SLUG_LENGTH)
-from .validators import validate_tag_color, validate_tag_slug
+from .constants import MAX_RECIPE_VALUE_LENGTH, MAX_TAG_COLOR_LENGTH
+from .validators import validate_tag_color, validate_tag_name
 
 
 class Tag(models.Model):
     name = models.CharField(
         verbose_name='название тега',
-        max_length=TAG_NAME_LENGTH,
+        max_length=MAX_RECIPE_VALUE_LENGTH,
         unique=True,
+        validators=[validate_tag_name],
     )
     color = models.CharField(
         verbose_name='HEX-цвет тега',
-        max_length=TAG_COLOR_LENGTH,
+        max_length=MAX_TAG_COLOR_LENGTH,
         unique=True,
         validators=[validate_tag_color],
     )
     slug = models.SlugField(
         verbose_name='слаг тега',
-        max_length=TAG_SLUG_LENGTH,
+        max_length=MAX_RECIPE_VALUE_LENGTH,
         unique=True,
-        validators=[validate_tag_slug],
+        validators=[validate_slug],
     )
 
     class Meta:
@@ -40,17 +38,23 @@ class Tag(models.Model):
 class Ingredient(models.Model):
     name = models.CharField(
         verbose_name='ингредиент',
-        max_length=INGREDIENT_NAME_LENGTH,
+        max_length=MAX_RECIPE_VALUE_LENGTH,
     )
     measurement_unit = models.CharField(
         verbose_name='единица измерения',
-        max_length=MEASUREMENT_UNIT_LENGTH,
+        max_length=MAX_RECIPE_VALUE_LENGTH,
     )
 
     class Meta:
         ordering = ('name',)
         verbose_name = 'ингредиент'
         verbose_name_plural = 'ингредиенты'
+        constraints = (
+            models.UniqueConstraint(
+                fields=['name', 'measurement_unit'],
+                name='unique_ingredient_with_measurement_unit',
+            ),
+        )
 
     def __str__(self):
         return f'{self.name}, {self.measurement_unit}'
@@ -59,7 +63,7 @@ class Ingredient(models.Model):
 class Recipe(models.Model):
     name = models.CharField(
         verbose_name='название рецепта',
-        max_length=RECIPE_NAME_LENGTH,
+        max_length=MAX_RECIPE_VALUE_LENGTH,
     )
     text = models.TextField('описание')
     author = models.ForeignKey(
@@ -72,15 +76,8 @@ class Recipe(models.Model):
         'дата публикации',
         auto_now_add=True,
     )
-    ingredients = models.ManyToManyField(
-        Ingredient,
-        through='RecipeIngredient',
-        verbose_name='cписок ингредиентов',
-        related_name='recipes',
-    )
     tags = models.ManyToManyField(
         Tag,
-        through='RecipeTag',
         verbose_name='список тегов',
         related_name='recipes',
     )
@@ -116,7 +113,7 @@ class RecipeIngredient(models.Model):
         Ingredient,
         verbose_name='ингредиент',
         on_delete=models.CASCADE,
-        related_name='ingredients_used',
+        related_name='+',
     )
     amount = models.PositiveSmallIntegerField(
         verbose_name='количество ингридиента',
@@ -142,33 +139,6 @@ class RecipeIngredient(models.Model):
         )
 
 
-class RecipeTag(models.Model):
-    recipe = models.ForeignKey(
-        Recipe,
-        verbose_name='рецепт',
-        on_delete=models.CASCADE,
-        related_name='recipes_with_tags',
-    )
-    tag = models.ForeignKey(
-        Tag,
-        verbose_name='тег',
-        on_delete=models.CASCADE,
-        related_name='tags_used',
-    )
-
-    class Meta:
-        verbose_name = 'рецепт-тег'
-        constraints = [
-            models.UniqueConstraint(
-                fields=['recipe', 'tag'],
-                name='unique_recipe_tag',
-            ),
-        ]
-
-    def __str__(self):
-        return f'{self.recipe.name}: {self.tag.name}'
-
-
 class Favorite(models.Model):
     user = models.ForeignKey(
         User,
@@ -180,7 +150,7 @@ class Favorite(models.Model):
         Recipe,
         verbose_name='рецепты в избранном',
         on_delete=models.CASCADE,
-        related_name='favorite_recipe',
+        related_name='+',
     )
 
     class Meta:
@@ -208,7 +178,7 @@ class ShoppingCart(models.Model):
         Recipe,
         verbose_name='рецепты в списке покупок',
         on_delete=models.CASCADE,
-        related_name='is_in_shopping_cart',
+        related_name='+',
     )
 
     class Meta:

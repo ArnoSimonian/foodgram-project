@@ -1,39 +1,29 @@
-import base64
-
-from django.core.files.base import ContentFile
 from django.db import transaction
+from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
-from users.models import Subscribe
-from users.serializers import CustomUserSerializer
-
+from users.serializers import UserSerializer
 from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                      ShoppingCart, Tag)
-from .validators import validate_tag_color, validate_tag_slug
+from .validators import validate_tag_color, validate_tag_name
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time',)
 
 
-class UserSubscribeSerializer(CustomUserSerializer):
+class UserSubscribeSerializer(UserSerializer):
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.ReadOnlyField(source='recipes.count')
 
-    class Meta(CustomUserSerializer.Meta):
-        fields = CustomUserSerializer.Meta.fields + (
+    class Meta(UserSerializer.Meta):
+        fields = UserSerializer.Meta.fields + (
             'recipes', 'recipes_count',
         )
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Subscribe.objects.all(),
-                fields=('user', 'subscribing',),
-                message="Нельзя подписаться на автора дважды.",
-            ),
-        ]
 
     def get_recipes(self, obj):
         request = self.context['request']
@@ -44,27 +34,17 @@ class UserSubscribeSerializer(CustomUserSerializer):
         serializer = RecipeShortSerializer(queryset, many=True, read_only=True)
         return serializer.data
 
-    def validate(self, data):
-        if self.context['request'].method == 'POST' and (
-            self.context['request'].user.pk == self.context['view'].kwargs.get(
-                'user_id')
-        ):
-            raise serializers.ValidationError(
-                "Нельзя подписаться на самого себя."
-            )
-        return data
-
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ('id', 'name', 'color', 'slug',)
 
+    def validate_tag_name(self, value):
+        return validate_tag_name(value)
+
     def validate_tag_color(self, value):
         return validate_tag_color(value)
-
-    def validate_tag_slug(self, value):
-        return validate_tag_slug(value)
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -88,13 +68,13 @@ class RecipeIngredientReadSerializer(serializers.ModelSerializer):
 
 class RecipeReadSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
-    author = CustomUserSerializer(read_only=True)
+    author = UserSerializer(read_only=True)
     ingredients = RecipeIngredientReadSerializer(
         many=True,
         read_only=True,
         source='recipes_with_ingredients',
     )
-    image = serializers.URLField(source='image.url')
+    image = Base64ImageField(use_url=True, max_length=None)
     is_favorited = serializers.SerializerMethodField(read_only=True)
     is_in_shopping_cart = serializers.SerializerMethodField(read_only=True)
 
@@ -126,15 +106,6 @@ class RecipeReadSerializer(serializers.ModelSerializer):
         )
 
 
-class Base64ImageField(serializers.ImageField):
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-        return super(Base64ImageField, self).to_internal_value(data)
-
-
 class RecipeIngredientCreateUpdateSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(
         queryset=Ingredient.objects.all(),
@@ -154,7 +125,7 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
         queryset=Tag.objects.all(),
         many=True,
     )
-    image = Base64ImageField()
+    image = Base64ImageField(use_url=True, max_length=None)
 
     class Meta:
         model = Recipe
@@ -188,6 +159,11 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Теги не могут повторяться.")
         return tags
 
+    def validate_image(self, image):
+        if not image:
+            raise serializers.ValidationError("Добавьте картинку рецепта.")
+        return image
+
     def add_ingredients(self, recipe, ingredients):
         RecipeIngredient.objects.bulk_create(
             RecipeIngredient(
@@ -219,12 +195,14 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "Поле 'tags' обязательно для обновления."
             )
-        recipe = super().update(recipe, validated_data)
         if ingredients:
-            recipe.ingredients.clear()
+            RecipeIngredient.objects.select_related(
+                'recipe', 'recipes_with_ingredients'
+            ).filter(recipe=recipe).delete()
             self.add_ingredients(recipe, ingredients)
         if tags:
             recipe.tags.set(tags)
+        recipe = super().update(recipe, validated_data)
         recipe.save()
         return recipe
 
@@ -243,8 +221,10 @@ class AbstractFavoriteShoppingCartSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "Этот рецепт уже был добавлен ранее."
             )
-        if not data['recipe']:
-            raise serializers.ValidationError("Этого рецепта не существует.")
+        if not data['recipe'] and (
+            self.context['request'].method == 'DELETE'
+        ):
+            raise serializers.ValidationError("Этот рецепт не был добавлен.")
         return data
 
     def to_representation(self, instance):

@@ -13,9 +13,7 @@ class UserAdmin(UserAdmin):
         'first_name',
         'last_name',
         'password',
-        'role',
     )
-    list_editable = ('role',)
     search_fields = ('username', 'email',)
     list_filter = ('username', 'email',)
     empty_value_display = '-пусто-'
