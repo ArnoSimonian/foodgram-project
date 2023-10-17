@@ -23,6 +23,8 @@ services:
     volumes:
       - backend_static:/app/static
       - backend_media:/app/media
+    ports:
+      - 8000:8000
 
   frontend:
     build:
