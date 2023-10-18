@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from core.constants import SHOPPING_CART_FILENAME
 from .filters import IngredientSearchFilter, RecipeFilter
 from .models import Ingredient, Recipe, ShoppingCart, Tag
 from .permissions import IsAuthorOrReadOnly
@@ -33,7 +34,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.select_related(
-        'author').prefetch_related('recipes_with_ingredients__recipe', 'tags')
+        'author').prefetch_related('ingredients__recipe', 'tags')
     serializer_class = RecipeCreateUpdateSerializer
     permission_classes = (IsAuthorOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
@@ -89,38 +90,35 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ingredients_in_cart = ShoppingCart.objects.filter(
             user=request.user
         ).values(
-            'recipe__recipes_with_ingredients__ingredient__name',
-            'recipe__recipes_with_ingredients__ingredient__measurement_unit',
+            'recipe__ingredients__ingredient__name',
+            'recipe__ingredients__ingredient__measurement_unit',
         ).order_by(
-            'recipe__recipes_with_ingredients__ingredient__name'
+            'recipe__ingredients__ingredient__name'
         ).annotate(
-            total_amount=Sum('recipe__recipes_with_ingredients__amount')
+            total_amount=Sum('recipe__ingredients__amount')
         )
 
         shopping_cart = ['Список покупок\n\n']
 
         for ingredient in ingredients_in_cart:
             ingredient_name = ingredient[
-                'recipe__recipes_with_ingredients__ingredient__name'
+                'recipe__ingredients__ingredient__name'
             ]
             amount = ingredient['total_amount']
             measurement_unit = ingredient[
-                'recipe__recipes_with_ingredients__ingredient__'
-                'measurement_unit'
+                'recipe__ingredients__ingredient__measurement_unit'
             ]
 
             shopping_cart.append(
                 f'{ingredient_name}: {amount} {measurement_unit}\n'
             )
 
-        FILENAME = 'shopping-list.txt'
-
         return HttpResponse(
             shopping_cart,
             headers={
                 'Content-Type': 'text/plain',
                 'Content-Disposition': (
-                    f'attachment; filename={FILENAME}'
+                    f'attachment; filename={SHOPPING_CART_FILENAME}'
                 ),
             },
         )

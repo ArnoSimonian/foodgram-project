@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'recipes.apps.RecipesConfig',
     'api.apps.ApiConfig',
+    'core.apps.CoreConfig',
 ]
 
 MIDDLEWARE = [
@@ -79,9 +80,6 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
-    {
-        'NAME': 'users.validators.MaxLengthPasswordValidator',
-    },
 ]
 
 LANGUAGE_CODE = 'ru-RU'
@@ -105,7 +103,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.TokenAuthentication',
     ],
 
-    'DEFAULT_PAGINATION_CLASS': 'api.pagination.LimitPageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'core.pagination.LimitPageNumberPagination',
     'PAGE_SIZE': 6,
 }
 
@@ -115,7 +113,7 @@ DJOSER = {
 
     'PERMISSIONS': {
         'user_list': ['rest_framework.permissions.AllowAny'],
-        'user': ['rest_framework.permissions.AllowAny'],
+        'user': ['users.permissions.CurrentUserOrReadOnly'],
     },
 
     'SERIALIZERS': {

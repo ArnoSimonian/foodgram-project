@@ -1,9 +1,9 @@
-from django.core.validators import MinValueValidator, validate_slug
+from django.core.validators import MinValueValidator
 from django.db import models
 
+from core.constants import MAX_RECIPE_VALUE_LENGTH, MAX_TAG_COLOR_LENGTH
+from core.validators import name_validator, tag_color_validator
 from users.models import User
-from .constants import MAX_RECIPE_VALUE_LENGTH, MAX_TAG_COLOR_LENGTH
-from .validators import validate_tag_color, validate_tag_name
 
 
 class Tag(models.Model):
@@ -11,19 +11,18 @@ class Tag(models.Model):
         verbose_name='название тега',
         max_length=MAX_RECIPE_VALUE_LENGTH,
         unique=True,
-        validators=[validate_tag_name],
+        validators=[name_validator],
     )
     color = models.CharField(
         verbose_name='HEX-цвет тега',
         max_length=MAX_TAG_COLOR_LENGTH,
         unique=True,
-        validators=[validate_tag_color],
+        validators=[tag_color_validator],
     )
     slug = models.SlugField(
         verbose_name='слаг тега',
         max_length=MAX_RECIPE_VALUE_LENGTH,
         unique=True,
-        validators=[validate_slug],
     )
 
     class Meta:
@@ -39,6 +38,7 @@ class Ingredient(models.Model):
     name = models.CharField(
         verbose_name='ингредиент',
         max_length=MAX_RECIPE_VALUE_LENGTH,
+        validators=[name_validator],
     )
     measurement_unit = models.CharField(
         verbose_name='единица измерения',
@@ -64,6 +64,7 @@ class Recipe(models.Model):
     name = models.CharField(
         verbose_name='название рецепта',
         max_length=MAX_RECIPE_VALUE_LENGTH,
+        validators=[name_validator],
     )
     text = models.TextField('описание')
     author = models.ForeignKey(
@@ -107,7 +108,7 @@ class RecipeIngredient(models.Model):
         Recipe,
         verbose_name='рецепт',
         on_delete=models.CASCADE,
-        related_name='recipes_with_ingredients',
+        related_name='ingredients',
     )
     ingredient = models.ForeignKey(
         Ingredient,

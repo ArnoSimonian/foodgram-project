@@ -32,7 +32,7 @@ class RecipeAdmin(admin.ModelAdmin):
 
     @admin.display(description='ингредиенты рецепта')
     def ingredients_list(self, recipe):
-        items = recipe.recipes_with_ingredients.values_list(
+        items = recipe.ingredients.values_list(
             'ingredient__name', flat=True
         )
         return ', '.join(items)

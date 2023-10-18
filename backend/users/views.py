@@ -14,12 +14,6 @@ class UserViewSet(viewsets.GenericViewSet):
     serializer_class = UserSerializer
     permission_classes = (AllowAny,)
 
-    @action(methods=["get"],
-            permission_classes=(IsAuthenticated,),
-            detail=False)
-    def me(self, request, *args, **kwargs):
-        return Response(self.get_serializer(request.user).data)
-
     @action(methods=['get'],
             serializer_class=UserSubscribeSerializer,
             permission_classes=(IsAuthenticated,),

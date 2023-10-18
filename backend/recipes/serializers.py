@@ -6,11 +6,9 @@ from rest_framework.validators import UniqueTogetherValidator
 from users.serializers import UserSerializer
 from .models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                      ShoppingCart, Tag)
-from .validators import validate_tag_color, validate_tag_name
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time',)
@@ -27,7 +25,10 @@ class UserSubscribeSerializer(UserSerializer):
 
     def get_recipes(self, obj):
         request = self.context['request']
-        recipes_limit = int(request.query_params.get('recipes_limit', 0))
+        try:
+            recipes_limit = int(request.query_params.get('recipes_limit', 0))
+        except ValueError:
+            recipes_limit = 0
         queryset = obj.recipes.all()
         if recipes_limit > 0:
             queryset = queryset[:recipes_limit]
@@ -39,12 +40,6 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = ('id', 'name', 'color', 'slug',)
-
-    def validate_tag_name(self, value):
-        return validate_tag_name(value)
-
-    def validate_tag_color(self, value):
-        return validate_tag_color(value)
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -72,7 +67,6 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientReadSerializer(
         many=True,
         read_only=True,
-        source='recipes_with_ingredients',
     )
     image = Base64ImageField(use_url=True, max_length=None)
     is_favorited = serializers.SerializerMethodField(read_only=True)
@@ -119,7 +113,6 @@ class RecipeIngredientCreateUpdateSerializer(serializers.ModelSerializer):
 class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
     ingredients = RecipeIngredientCreateUpdateSerializer(
         many=True,
-        source='recipes_with_ingredients',
     )
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(),
@@ -176,7 +169,7 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        ingredients = validated_data.pop('recipes_with_ingredients')
+        ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
         self.add_ingredients(recipe, ingredients)
@@ -185,7 +178,7 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def update(self, recipe, validated_data):
-        ingredients = validated_data.pop('recipes_with_ingredients', None)
+        ingredients = validated_data.pop('ingredients', None)
         if ingredients is None:
             raise serializers.ValidationError(
                 "Поле 'ingredients' обязательно для обновления."
@@ -197,7 +190,7 @@ class RecipeCreateUpdateSerializer(serializers.ModelSerializer):
             )
         if ingredients:
             RecipeIngredient.objects.select_related(
-                'recipe', 'recipes_with_ingredients'
+                'recipe', 'ingredients'
             ).filter(recipe=recipe).delete()
             self.add_ingredients(recipe, ingredients)
         if tags:
