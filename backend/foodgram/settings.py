@@ -112,8 +112,7 @@ DJOSER = {
     'HIDE_USERS': False,
 
     'PERMISSIONS': {
-        'user_list': ['rest_framework.permissions.AllowAny'],
-        'user': ['users.permissions.CurrentUserOrReadOnly'],
+        'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
     },
 
     'SERIALIZERS': {

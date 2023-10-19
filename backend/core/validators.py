@@ -4,7 +4,7 @@ from django.core.validators import RegexValidator
 from .constants import NAME_REGEX, TAG_COLOR_REGEX
 
 NAME_ERROR_MSG = ("Поле {0} может содержать только русские и латинские буквы "
-                  "и символы '@.+-_'")
+                  "и пробел.")
 TAG_COLOR_ERROR_MSG = ("Поле {0} должно содержать латинские буквы 'a-f/A-F' "
                        "и/или цифры, начинаться с символа '#' и содержать "
                        "не более 7 символов.")
