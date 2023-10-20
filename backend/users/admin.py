@@ -16,6 +16,9 @@ class UserAdmin(UserAdmin):
     )
     search_fields = ('username', 'email',)
     list_filter = ('username', 'email',)
+    add_fieldsets = UserAdmin.add_fieldsets + (
+        (None, {'fields': ['email', 'first_name', 'last_name']}),
+    )
     empty_value_display = '-пусто-'
 
 
