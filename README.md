@@ -11,10 +11,6 @@
 
 Адрес проекта: **https://foodgram-idze.ddns.net/**
 
-Данные для входа в админку:  
-Логин: arn-simonian@yandex.ru  
-Пароль: rfkz1vfkz
-
 Документация к API находится в файле docs/openapi-schema.yml и доступна по эндпоинту ```/api/docs/```
 
 ## Технологии
