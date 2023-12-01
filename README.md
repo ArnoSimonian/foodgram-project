@@ -91,6 +91,8 @@ sudo certbot --nginx
 
 
 При отправке коммита в ветку `master` с помощью `push` будет выполнен полный деплой проекта. Подробности в файле [main.yml](https://github.com/ArnoSimonian/foodgram-project/blob/master/.github/workflows/main.yml).
-## Авторы
 
-- Арно Симонян [@ArnoSimonian](https://github.com/ArnoSimonian)
+## Автор
+
+Арно Симонян [@ArnoSimonian](https://github.com/ArnoSimonian)
+
